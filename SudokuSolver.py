@@ -3,23 +3,12 @@ import math
 import numpy as np
 import cv2
 import imutils
-from matplotlib import pyplot as plt
 
 
 def show_image(img):
     cv2.imshow('image', img)  # Display the image
     cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
     cv2.destroyAllWindows()  # Close all windows
-
-
-def plot_many_images(images, titles, rows=1, columns=2):
-    for i, image in enumerate(images):
-        plt.subplot(rows, columns, i + 1)
-        plt.imshow(image, 'gray')
-        plt.title(titles[i])
-        plt.xticks([]), plt.yticks([])  # Hide tick marks
-    plt.show()
-
 
 def display_points(in_img, points, color=(0, 0, 255)):
     img = in_img.copy()
@@ -67,14 +56,34 @@ def locate_sudoku(img):
         if math.fabs(cv2.contourArea(approximated_poly)) > 1000:
             rect = cv2.minAreaRect(approximated_poly)
             box = cv2.boxPoints(rect)
-            box = np.array(box, dtype=np.int32)
-            board = box
+            boards_list = []
+            for i in range(len(box)):
+                boards_list.append(np.array([box[i]], dtype=np.int32))
+            board = np.array(boards_list, dtype=np.int32)
             break
     return board
 
+def sort_points(board):
+    sorted_board = np.zeros_like(board)
+
+    sorted_x = board[np.argsort(board[:, 0, 0]), :]
+
+    lefts = sorted_x[:2, :, :]
+    rights = sorted_x[2:, :, :]
+
+    sorted_lefts = lefts[np.argsort(lefts[:, 0, 1]), :]
+    sorted_rights = rights[np.argsort(rights[:, 0, 1]), :]
+
+    sorted_board[0] = sorted_lefts[0]
+    sorted_board[1] = sorted_lefts[1]
+    sorted_board[2] = sorted_rights[1]
+    sorted_board[3] = sorted_rights[0]
+
+    return sorted_board
 
 # Projekt the board into a 900 * 900 window
 def get_perspektiveProjection(img, board, height=900, width=900):
+    board = sort_points(board)
     board_vertecies = np.float32([board[0], board[1], board[2], board[3]])
     box_vertecies = np.float32([[0, 0], [0, height], [width, height], [width, 0]])
 
@@ -83,9 +92,11 @@ def get_perspektiveProjection(img, board, height=900, width=900):
 
 
 def main():
-    img = cv2.imread('sudoku2.jpg')
+    img = cv2.imread('sudoku3.jpg')
     board = locate_sudoku(img)
     if board is not None:
+        testimg = get_perspektiveProjection(img, board)
+        show_image(testimg)
         display_points(img, board)
         display_rects(img, [board])
 
