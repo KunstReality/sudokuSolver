@@ -1,8 +1,10 @@
+#Droidcam implementation by https://github.com/cardboardcode/droidcam_simple_setup
 import math
 
 import numpy as np
 import cv2
 import imutils
+
 
 
 def show_image(img):
@@ -135,7 +137,55 @@ def locate_cells(img):
 
     return np.array(cells, dtype=np.int32)
 
+def cellPatching(cells):
+    print(cells)
+
+    #Find potential cells which where missed in grid
+    #A cell is the right top point of a box and has width and height additionaly
+    #A potential cell is adjacent to at least 4 other cells around
+    #But with the points you can just look for top, bottom, left and right for another point then connect and make box from point distances and found point remaining value
+
+    return cells
+
+HTTP = 'http://'
+IP_ADDRESS = '192.168.0.123'
+URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
+
+
+def camdroid():
+    print("[ droidcam.py ] - Initializing...")
+
+    # Opening video stream of ip camera via its url
+    cap = cv2.VideoCapture(URL)
+
+    # Corrective actions printed in the even of failed connection.
+    if cap.isOpened() is not True:
+        print ('Not opened.')
+        print ('Please ensure the following:')
+        print ('1. DroidCam is not running in your browser.')
+        print ('2. The IP address given is correct.')
+
+    # Connection successful. Proceeding to display video stream.
+    while cap.isOpened() is True:
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+
+        # Turning your frames into grayscale
+        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        cv2.imshow('frame',frame)
+        # cv2.imshow('gray',gray)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
 def main():
+    camdroid()
+
+    print("Test")
+    """
     for i in range(1, 9):
         img = cv2.imread('sudoku' + str(i) + '.jpg')
         print(i)
@@ -144,9 +194,11 @@ def main():
         if board is not None:
             perspective_img = get_perspektiveProjection(img, board)
             cells = locate_cells(perspective_img)
+            cells = cellPatching(cells)
             for cell in cells:
                 cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
             show_image(perspective_img)
+    """
 
 if __name__ == '__main__':
     main()
