@@ -1,10 +1,10 @@
 #Droidcam implementation by https://github.com/cardboardcode/droidcam_simple_setup
+
 import math
 
 import numpy as np
 import cv2
 import imutils
-
 
 
 def show_image(img):
@@ -151,7 +151,6 @@ HTTP = 'http://'
 IP_ADDRESS = '192.168.0.123'
 URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
 
-
 def camdroid():
     print("[ droidcam.py ] - Initializing...")
 
@@ -173,7 +172,19 @@ def camdroid():
         # Turning your frames into grayscale
         # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        cv2.imshow('frame',frame)
+        processed_img = preprocess_img(frame)
+        board = locate_sudoku(processed_img)
+        if board is not None:
+            perspective_img = get_perspektiveProjection(frame, board)
+            cells = locate_cells(perspective_img)
+            cells = cellPatching(cells)
+            for cell in cells:
+                cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
+            #show_image(perspective_img)
+            cv2.imshow('perspective_img', perspective_img)
+
+
+        # cv2.imshow('frame', frame)
         # cv2.imshow('gray',gray)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
