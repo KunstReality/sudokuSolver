@@ -35,6 +35,7 @@ def preprocess_img(img, skip_morph=False):
 def locate_sudoku(img):
     # find edges using Canny
     # @params: first and second Threshold
+
     edges = cv2.Canny(img, 200, 250)
 
     # findContours: boundaries of shapes having same intensity
@@ -114,8 +115,6 @@ def locate_cells(img):
     opening = cv2.morphologyEx(process_img, cv2.MORPH_OPEN, kernel, iterations=3)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
     opening = cv2.morphologyEx(opening, cv2.MORPH_OPEN, kernel, iterations=3)
-
-    show_image(opening)
 
     vertices = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(vertices)
