@@ -18,7 +18,6 @@ def display_points(in_img, points, color=(0, 0, 255)):
         img = cv2.drawContours(img, [point], -1, color, 3)
     return img
 
-
 def display_rect(in_img, contours, color=255):
     img = in_img.copy()
     for rect in contours:
@@ -140,10 +139,15 @@ def locate_cells(img):
 def cellPatching(cells):
     print(cells)
 
-    #Find potential cells which where missed in grid
-    #A cell is the right top point of a box and has width and height additionaly
-    #A potential cell is adjacent to at least 4 other cells around
-    #But with the points you can just look for top, bottom, left and right for another point then connect and make box from point distances and found point remaining value
+    # Find potential cells which where missed in grid
+    # A cell is the right top point of a box and has width and height additionally
+    # A potential cell is adjacent to at least 4 other cells around
+    # But with the points you can just look for top, bottom, left and right for another point then connect
+    # and make box from point distances and found point remaining value
+    print("cells")
+    print(cells)
+
+
 
     return cells
 
@@ -180,9 +184,7 @@ def camdroid():
             cells = cellPatching(cells)
             for cell in cells:
                 cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
-            #show_image(perspective_img)
             cv2.imshow('perspective_img', perspective_img)
-
 
         # cv2.imshow('frame', frame)
         # cv2.imshow('gray',gray)
