@@ -1,3 +1,5 @@
+#Droidcam implementation by https://github.com/cardboardcode/droidcam_simple_setup
+
 import math
 
 import numpy as np
@@ -9,7 +11,31 @@ Blur img to reduce Noise. This function uses a gaussian blur for reducing noise
 and uses a binary Threshold which splits the img to 0/1 values
 """
 
+def show_image(img):
+    cv2.imshow('image', img)  # Display the image
+    cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
+    cv2.destroyAllWindows()  # Close all windows
 
+def display_points(in_img, points, color=(0, 0, 255)):
+    img = in_img.copy()
+    for point in points:
+        img = cv2.drawContours(img, [point], -1, color, 3)
+    return img
+
+def display_rect(in_img, contours, color=255):
+    img = in_img.copy()
+    for rect in contours:
+        img = cv2.drawContours(img, [rect], -1, color, 3)
+    return img
+
+def display_lines(in_img, lines, color=(0, 0, 255)):
+    img = in_img.copy()
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        img = cv2.line(img, (x1, y1), (x2, y2), color, 2, cv2.LINE_AA)
+    return img
+
+#Blur img to reduce Noise
 def preprocess_img(img, skip_morph=False):
     # converts color img to gray img
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -132,8 +158,70 @@ def locate_cells(img):
 
     return np.array(cells, dtype=np.int32)
 
+def cellPatching(cells):
+    print(cells)
+
+    # Find potential cells which where missed in grid
+    # A cell is the right top point of a box and has width and height additionally
+    # A potential cell is adjacent to at least 4 other cells around
+    # But with the points you can just look for top, bottom, left and right for another point then connect
+    # and make box from point distances and found point remaining value
+    print("cells")
+    print(cells)
+
+
+
+    return cells
+
+HTTP = 'http://'
+IP_ADDRESS = '192.168.0.123'
+URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
+
+def camdroid():
+    print("[ droidcam.py ] - Initializing...")
+
+    # Opening video stream of ip camera via its url
+    cap = cv2.VideoCapture(URL)
+
+    # Corrective actions printed in the even of failed connection.
+    if cap.isOpened() is not True:
+        print ('Not opened.')
+        print ('Please ensure the following:')
+        print ('1. DroidCam is not running in your browser.')
+        print ('2. The IP address given is correct.')
+
+    # Connection successful. Proceeding to display video stream.
+    while cap.isOpened() is True:
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+
+        # Turning your frames into grayscale
+        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        processed_img = preprocess_img(frame)
+        board = locate_sudoku(processed_img)
+        if board is not None:
+            perspective_img = get_perspektiveProjection(frame, board)
+            cells = locate_cells(perspective_img)
+            cells = cellPatching(cells)
+            for cell in cells:
+                cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
+            cv2.imshow('perspective_img', perspective_img)
+
+        # cv2.imshow('frame', frame)
+        # cv2.imshow('gray',gray)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
 
 def main():
+    camdroid()
+
+    print("Test")
+    """
     for i in range(1, 9):
         img = cv2.imread('sudoku' + str(i) + '.jpg')
         print(i)
@@ -143,9 +231,11 @@ def main():
             perspective_img = get_perspektiveProjection(img, board)
 
             cells = locate_cells(perspective_img)
+            cells = cellPatching(cells)
             for cell in cells:
                 cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
             show_image(perspective_img)
+    """
 
 
 if __name__ == '__main__':
