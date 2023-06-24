@@ -1,12 +1,19 @@
 #Droidcam implementation by https://github.com/cardboardcode/droidcam_simple_setup
+from _cffi_backend import callback
+
 from OpenCVHelpers import *
+from SudokuSolverHelper import solveSudoku
 from TesorflowHelpers import *
 
+from multiprocessing.dummy import Pool
+
 HTTP = 'http://'
-IP_ADDRESS = '192.168.178.21'
+IP_ADDRESS = '192.168.0.123'
 URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
 
 IMG_SIZE = 48
+
+
 
 def cellPatching(cells):
     print(cells)
@@ -20,6 +27,8 @@ def cellPatching(cells):
     print(cells)
     return cells
 
+s = False
+
 def find_sudoku(img):
     processed_img = preprocess_img(img)
     board = locate_sudoku(processed_img)
@@ -30,14 +39,27 @@ def find_sudoku(img):
             cells = sort_boxes(cells)
             box_imgs = get_box_imgs(perspective_img, cells, IMG_SIZE)
             board_numbers = get_prediction(box_imgs)
-            print(board_numbers)
+            #print(board_numbers.shape)
+            if board_numbers.shape == (9, 9):
+                #solveSudoku(board_numbers)
+                if not globals()["s"]:
+                    print("\nsolved grid: ")
+                    globals()["s"] = True
+                    #pool = Pool(processes=1)
+                    print("solving...")
+                    #pool.apply_async(solveSudoku, board_numbers, callback=globals()["s"])
+                    globals()["s"] = solveSudoku(board_numbers)
+                else:
+                    print(globals()["s"])
             for cell in cells:
                 cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
             return perspective_img
         else:
-            print("couldn't find the cells in sudoku! make sure sudoku is 9x9")
+            pass
+            #print("couldn't find the cells in sudoku! make sure sudoku is 9x9")
     else:
-        print("couldn't locate the board! please move the camera around")
+        pass
+        #print("couldn't locate the board! please move the camera around")
 
 def camdroid():
     print("[ droidcam.py ] - Initializing...")
