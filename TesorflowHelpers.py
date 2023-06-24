@@ -3,9 +3,10 @@ from tensorflow import keras
 #from keras.datasets import mnist
 from keras.models import load_model
 import numpy as np
+import cv2
 
 model = load_model('model-OCR.h5')
-img_size = 28
+labels = np.arange(0, 10)
 
 """def load_mnist():
     ((trainData, trainLabels), (testData, testLabels)) = mnist.load_data()
@@ -15,7 +16,20 @@ img_size = 28
 
     return (data, labels)"""
 
-def get_prediction(img):
-    prediction = model.predict(img)
-    return prediction
+def get_prediction(cells):
+    print(len(cells))
+    predictedt_numbers = []
+    prediction = model.predict(cells)
+    for weights in prediction:
+        index = (np.argmax(weights))
+        predictedt_number = labels[index]
+        predictedt_numbers.append(predictedt_number)
+    print(predictedt_numbers)
+    print(len(predictedt_numbers))
+    if len(predictedt_numbers) > 81:
+        print("wtf")
+        return np.zeros((9, 9))
+    return np.array(predictedt_numbers).astype('uint8').reshape(9, 9).T
+
+
 
