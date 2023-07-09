@@ -5,8 +5,8 @@ import math
 
 def show_image(img):
     cv2.imshow('image', img)  # Display the image
-    cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
-    cv2.destroyAllWindows()  # Close all windows
+    #cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
+    #cv2.destroyAllWindows()  # Close all windows
 
 def display_points(in_img, points, color=(0, 0, 255)):
     img = in_img.copy()
@@ -39,12 +39,12 @@ def get_box_imgs(img, boxes, img_size):
 def locate_cells(img):
 
     process_img = preprocess_img(img, False)
-
+    #show_image(process_img)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 3))
     opening = cv2.morphologyEx(process_img, cv2.MORPH_OPEN, kernel, iterations=3)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
     opening = cv2.morphologyEx(opening, cv2.MORPH_OPEN, kernel, iterations=3)
-
+    #show_image(opening)
     vertices = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(vertices)
 
@@ -52,10 +52,10 @@ def locate_cells(img):
     # find the board cells
     cells = []
     for contour in sorted_contours:
-        peri = cv2.arcLength(contour, True)
-        approximated_poly = cv2.approxPolyDP(contour, 15, True)
+        #peri = cv2.arcLength(contour, True)
+        approximated_poly = cv2.approxPolyDP(contour, 10, True)
         if len(approximated_poly) >= 4:
-            if 3000 < math.fabs(cv2.contourArea(approximated_poly)) < 10000:
+            if 1000 < math.fabs(cv2.contourArea(approximated_poly)) < 15000:
                 x, y, w, h = cv2.boundingRect(approximated_poly)
                 cells.append(np.array([x, y, x + w, y + h], dtype=np.int32))
 

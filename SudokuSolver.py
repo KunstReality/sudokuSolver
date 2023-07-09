@@ -1,5 +1,5 @@
 #Droidcam implementation by https://github.com/cardboardcode/droidcam_simple_setup
-from _cffi_backend import callback
+#from _cffi_backend import callback
 
 from OpenCVHelpers import *
 from SudokuSolverHelper import solveSudoku
@@ -8,7 +8,7 @@ from TesorflowHelpers import *
 from multiprocessing.dummy import Pool
 
 HTTP = 'http://'
-IP_ADDRESS = '192.168.0.123'
+IP_ADDRESS = '192.168.178.21'
 URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
 
 IMG_SIZE = 48
@@ -31,15 +31,17 @@ s = False
 
 def find_sudoku(img):
     processed_img = preprocess_img(img)
+    #show_image(processed_img)
     board = locate_sudoku(processed_img)
     if board is not None:
         perspective_img = get_perspektiveProjection(img, board)
+        #show_image(perspective_img)
         cells = locate_cells(perspective_img)
         if len(cells) == 81:
             cells = sort_boxes(cells)
-            box_imgs = get_box_imgs(perspective_img, cells, IMG_SIZE)
+            """box_imgs = get_box_imgs(perspective_img, cells, IMG_SIZE)
             board_numbers = get_prediction(box_imgs)
-            #print(board_numbers.shape)
+            print(board_numbers)
             if board_numbers.shape == (9, 9):
                 #solveSudoku(board_numbers)
                 if not globals()["s"]:
@@ -50,7 +52,7 @@ def find_sudoku(img):
                     #pool.apply_async(solveSudoku, board_numbers, callback=globals()["s"])
                     globals()["s"] = solveSudoku(board_numbers)
                 else:
-                    print(globals()["s"])
+                    print(globals()["s"])"""
             for cell in cells:
                 cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
             return perspective_img
