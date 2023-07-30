@@ -29,7 +29,7 @@ def get_prediction(cells):
     if len(predictedt_numbers) > 81:
         print("wtf")
         return np.zeros((9, 9))
-    return np.array(predictedt_numbers).astype('uint8').reshape(9, 9).T
+    return len(predictedt_numbers), np.array(predictedt_numbers).astype('uint8').reshape(9, 9).T
 
 
 

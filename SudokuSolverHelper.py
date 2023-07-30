@@ -28,7 +28,7 @@ def solve(grid, row, col, num):
 
 
 def Suduko(grid, row, col):
-    print("Suduko")
+    #print("Suduko")
     if row == M - 1 and col == M:
         return True
     if col == M:
@@ -45,7 +45,8 @@ def Suduko(grid, row, col):
                 print("solved")
                 return True
         else:
-            print("not solved")
+            pass
+            #print("not solved")
         grid[row][col] = 0
     return False
 

@@ -3,6 +3,10 @@ import numpy as np
 import imutils
 import math
 
+
+def rotate_image(img):
+    return cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+
 def show_image(img):
     cv2.imshow('image', img)  # Display the image
     #cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
