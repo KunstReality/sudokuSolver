@@ -38,7 +38,7 @@ def get_box_imgs(img, boxes, img_size):
         mittelY = y + h/2
         #grayBox = gray[int(mittelX - img_size/2) : int(mittelX + img_size/2), int(mittelY - img_size/2): int(mittelY + img_size/2)]
 
-        grayBox = gray[x+10 : x+w, y + 10: y + h]
+        grayBox = gray[x + 10: x+w, y + 10: y + h]
         box_imgs.append(resize_cell(grayBox, img_size))
     return np.array(box_imgs).reshape(-1, img_size, img_size, 1)
 def locate_cells(img):
