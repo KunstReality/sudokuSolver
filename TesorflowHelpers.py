@@ -17,17 +17,13 @@ labels = np.arange(0, 10)
     return (data, labels)"""
 
 def get_prediction(cells):
-    #print(len(cells))
     predictedt_numbers = []
     prediction = model.predict(cells)
     for weights in prediction:
         index = (np.argmax(weights))
         predictedt_number = labels[index]
         predictedt_numbers.append(predictedt_number)
-    #print(predictedt_numbers)
-    #print(len(predictedt_numbers))
     if len(predictedt_numbers) > 81:
-        print("wtf")
         return np.zeros((9, 9))
     return np.array(predictedt_numbers).astype('uint8').reshape(9, 9).T
 

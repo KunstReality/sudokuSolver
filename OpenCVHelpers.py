@@ -3,8 +3,8 @@ import numpy as np
 import imutils
 import math
 
-def show_image(img):
-    cv2.imshow('image', img)  # Display the image
+def show_image(img, name='image'):
+    cv2.imshow(name, img)  # Display the image
     #cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
     #cv2.destroyAllWindows()  # Close all windows
 
@@ -33,8 +33,13 @@ def resize_cell(box_img, img_size):
 def get_box_imgs(img, boxes, img_size):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     box_imgs = []
-    for x, y, xW, yH in boxes:
-        box_imgs.append(resize_cell(gray[x:xW, y:yH], img_size))
+    for x, y, w, h in boxes:
+        mittelX = x + w/2
+        mittelY = y + h/2
+        #grayBox = gray[int(mittelX - img_size/2) : int(mittelX + img_size/2), int(mittelY - img_size/2): int(mittelY + img_size/2)]
+
+        grayBox = gray[x+10 : x+w, y + 10: y + h]
+        box_imgs.append(resize_cell(grayBox, img_size))
     return np.array(box_imgs).reshape(-1, img_size, img_size, 1)
 def locate_cells(img):
 
@@ -44,7 +49,6 @@ def locate_cells(img):
     opening = cv2.morphologyEx(process_img, cv2.MORPH_OPEN, kernel, iterations=3)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
     opening = cv2.morphologyEx(opening, cv2.MORPH_OPEN, kernel, iterations=3)
-    #show_image(opening)
     vertices = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(vertices)
 
@@ -57,7 +61,7 @@ def locate_cells(img):
         if len(approximated_poly) >= 4:
             if 1000 < math.fabs(cv2.contourArea(approximated_poly)) < 15000:
                 x, y, w, h = cv2.boundingRect(approximated_poly)
-                cells.append(np.array([x, y, x + w, y + h], dtype=np.int32))
+                cells.append(np.array([x, y, w, h], dtype=np.int32))
 
     return np.array(cells, dtype=np.int32)
 
@@ -163,3 +167,13 @@ def get_perspektiveProjection(img, board, height=900, width=900):
 
     projektMatrix = cv2.getPerspectiveTransform(board_vertecies, box_vertecies)
     return cv2.warpPerspective(img, projektMatrix, (height, width))
+
+def displayNumbers(img, numbers, color=(0, 255, 0)):
+    """Displays 81 numbers in an image or mask at the same position of each cell of the board"""
+    W = int(img.shape[1]/9)
+    H = int(img.shape[0]/9)
+    for i in range (9):
+        for j in range (9):
+            if numbers[(j*9)+i] !=0:
+                cv2.putText(img, str(numbers[(j*9)+i]), (i*W+int(W/2)-int((W/4)), int((j+0.7)*H)), cv2.FONT_HERSHEY_COMPLEX, 2, color, 2, cv2.LINE_AA)
+    return img

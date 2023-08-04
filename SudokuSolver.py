@@ -2,8 +2,9 @@
 #from _cffi_backend import callback
 
 from OpenCVHelpers import *
-from SudokuSolverHelper import solveSudoku
 from TesorflowHelpers import *
+from sudoku import Sudoku
+from VideoStreamer import *
 
 from multiprocessing.dummy import Pool
 
@@ -13,77 +14,101 @@ URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
 
 IMG_SIZE = 48
 
-
-
-def cellPatching(cells):
-    print(cells)
-
-    # Find potential cells which where missed in grid
-    # A cell is the right top point of a box and has width and height additionally
-    # A potential cell is adjacent to at least 4 other cells around
-    # But with the points you can just look for top, bottom, left and right for another point then connect
-    # and make box from point distances and found point remaining value
-    print("cells")
-    print(cells)
-    return cells
-
-s = False
+def find_cells(perspective_img):
+    cells = locate_cells(perspective_img)
+    if len(cells) == 81:
+        cells = sort_boxes(cells)
+        box_imgs = get_box_imgs(perspective_img, cells, IMG_SIZE)
+        for cell in cells:
+            cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[0] + cell[2], cell[1] + cell[3]), (36, 255, 12), 3)
+        return perspective_img, box_imgs
+    else:
+        pass
+        #print("couldn't find the cells in sudoku! make sure sudoku is 9x9")
 
 def find_sudoku(img):
     processed_img = preprocess_img(img)
-    #show_image(processed_img)
     board = locate_sudoku(processed_img)
     if board is not None:
         perspective_img = get_perspektiveProjection(img, board)
-        #show_image(perspective_img)
-        cells = locate_cells(perspective_img)
-        if len(cells) == 81:
-            cells = sort_boxes(cells)
-            """box_imgs = get_box_imgs(perspective_img, cells, IMG_SIZE)
-            board_numbers = get_prediction(box_imgs)
-            print(board_numbers)
-            if board_numbers.shape == (9, 9):
-                #solveSudoku(board_numbers)
-                if not globals()["s"]:
-                    print("\nsolved grid: ")
-                    globals()["s"] = True
-                    #pool = Pool(processes=1)
-                    print("solving...")
-                    #pool.apply_async(solveSudoku, board_numbers, callback=globals()["s"])
-                    globals()["s"] = solveSudoku(board_numbers)
-                else:
-                    print(globals()["s"])"""
-            for cell in cells:
-                cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[2], cell[3]), (36, 255, 12), 3)
-            return perspective_img
-        else:
-            pass
-            #print("couldn't find the cells in sudoku! make sure sudoku is 9x9")
+        perspective_imgs = []
+
+        perspective_imgs.append(perspective_img)
+        for i in range(1, 4):
+            perspective_imgs.append(cv2.rotate(perspective_imgs[i-1], cv2.ROTATE_90_CLOCKWISE))
+        return perspective_imgs
     else:
         pass
         #print("couldn't locate the board! please move the camera around")
+
+def solve(cells):
+    if cells is not None:
+        cell, boximages = cells
+        show_image(cell, "detected cells")
+        board_numbers = get_prediction(boximages)
+        if board_numbers.shape == (9, 9):
+
+            predicted_numbers = board_numbers.flatten()
+            puzzle = Sudoku(3, 3, board=board_numbers.tolist())
+            solved_board_nums = np.array(puzzle.solve(raising=True).board)
+
+            # create a binary array of the predicted numbers. 0 means unsolved numbers of sudoku and 1 means given number.
+            binArr = np.where(np.array(predicted_numbers)>0, 0, 1)
+
+            # get only solved numbers for the solved board
+            flat_solved_board_nums = solved_board_nums.flatten()*binArr
+
+            # create a mask
+            mask = np.zeros_like(cell)
+            # displays solved numbers in the mask in the same position where board numbers are empty
+            solved_board_mask = displayNumbers(mask, flat_solved_board_nums)
+
+            combined = cv2.addWeighted(cell, 0.7, solved_board_mask, 1, 0)
+            cv2.destroyWindow("detected cells")
+            cv2.imshow('frame', combined)
+            return True
+    return False
 
 def camdroid():
     print("[ droidcam.py ] - Initializing...")
 
     # Opening video stream of ip camera via its url
-    cap = cv2.VideoCapture(URL)
-
+    #cap = cv2.VideoCapture(URL)
+    cap = VideoCaptureHelper(URL)
     # Corrective actions printed in the even of failed connection.
-    if cap.isOpened() is not True:
+    if cap.cap.isOpened() is not True:
         print ('Not opened.')
         print ('Please ensure the following:')
         print ('1. DroidCam is not running in your browser.')
         print ('2. The IP address given is correct.')
 
-    # Connection successful. Proceeding to display video stream.
-    while cap.isOpened() is True:
-        # Capture frame-by-frame
-        ret, frame = cap.read()
+    BOARD_SOLVED = False
 
-        img = find_sudoku(frame)
-        if img is not None:
-            cv2.imshow('frame', img)
+    # Connection successful. Proceeding to display video stream.
+    while True:
+        if BOARD_SOLVED:
+            print("scan another board?")
+            if cv2.waitKey(0) == ord('y'):
+                BOARD_SOLVED = False
+                continue
+            else:
+                break
+
+        # Capture frame-by-frame
+        frame = cap.read()
+        if frame is not None:
+            show_image(frame, 'frame')
+            board = find_sudoku(frame)
+            if board is not None:
+                for imgs in board:
+                    cells = find_cells(imgs)
+                    if cells is not None:
+                        if not BOARD_SOLVED:
+                            try:
+                                BOARD_SOLVED = solve(cells)
+                                break
+                            except:
+                                continue
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
