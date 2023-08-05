@@ -36,9 +36,9 @@ def get_box_imgs(img, boxes, img_size):
     for x, y, w, h in boxes:
         mittelX = x + w/2
         mittelY = y + h/2
-        #grayBox = gray[int(mittelX - img_size/2) : int(mittelX + img_size/2), int(mittelY - img_size/2): int(mittelY + img_size/2)]
+        #grayBox = gray[int(mittelX - 2*w/3): int(mittelX + 2*w/3), int(mittelY - 2*h/3): int(mittelY + 2*h/3)]
 
-        grayBox = gray[x + 10: x+w, y + 10: y + h]
+        grayBox = gray[x + int(w/7): x+w, y + int(h/7): y + h]
         box_imgs.append(resize_cell(grayBox, img_size))
     return np.array(box_imgs).reshape(-1, img_size, img_size, 1)
 def locate_cells(img):
@@ -49,9 +49,10 @@ def locate_cells(img):
     opening = cv2.morphologyEx(process_img, cv2.MORPH_OPEN, kernel, iterations=3)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
     opening = cv2.morphologyEx(opening, cv2.MORPH_OPEN, kernel, iterations=3)
+
     vertices = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(vertices)
-
+    #show_image(opening)
     sorted_contours = sorted(contours, key=cv2.contourArea, reverse=False)
     # find the board cells
     cells = []
@@ -59,7 +60,7 @@ def locate_cells(img):
         #peri = cv2.arcLength(contour, True)
         approximated_poly = cv2.approxPolyDP(contour, 10, True)
         if len(approximated_poly) >= 4:
-            if 1000 < math.fabs(cv2.contourArea(approximated_poly)) < 15000:
+            if 500 < math.fabs(cv2.contourArea(approximated_poly)) < 30000:
                 x, y, w, h = cv2.boundingRect(approximated_poly)
                 cells.append(np.array([x, y, w, h], dtype=np.int32))
 

@@ -50,6 +50,8 @@ def solve(cells):
 
             predicted_numbers = board_numbers.flatten()
             puzzle = Sudoku(3, 3, board=board_numbers.tolist())
+            puzzle.show_full()
+
             solved_board_nums = np.array(puzzle.solve(raising=True).board)
 
             # create a binary array of the predicted numbers. 0 means unsolved numbers of sudoku and 1 means given number.
