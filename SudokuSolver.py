@@ -13,15 +13,18 @@ IP_ADDRESS = '192.168.178.21'
 URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
 
 IMG_SIZE = 48
+IMG_SIZE2 = 28
 
 def find_cells(perspective_img):
     cells = locate_cells(perspective_img)
     if len(cells) == 81:
         cells = sort_boxes(cells)
-        box_imgs = get_box_imgs(perspective_img, cells, IMG_SIZE)
+        box_imgs = np.array(get_box_imgs(perspective_img, cells, IMG_SIZE, True)).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
+        #digits = get_box_imgs(perspective_img, cells, IMG_SIZE2, True)
+
         for cell in cells:
             cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[0] + cell[2], cell[1] + cell[3]), (36, 255, 12), 3)
-        return perspective_img, box_imgs
+        return perspective_img, box_imgs #, digits
     else:
         pass
         #print("couldn't find the cells in sudoku! make sure sudoku is 9x9")
@@ -44,10 +47,10 @@ def find_sudoku(img):
 def solve(cells):
     if cells is not None:
         cell, boximages = cells
-        show_image(cell, "detected cells")
+        show_image(cell, "detected cells", wait=True)
         board_numbers = get_prediction(boximages)
+        #board_numbers = get_prediction2(digits)
         if board_numbers.shape == (9, 9):
-
             predicted_numbers = board_numbers.flatten()
             puzzle = Sudoku(3, 3, board=board_numbers.tolist())
             puzzle.show_full()
