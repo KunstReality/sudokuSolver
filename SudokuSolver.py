@@ -47,7 +47,7 @@ def find_sudoku(img):
 def solve(cells):
     if cells is not None:
         cell, boximages = cells
-        show_image(cell, "detected cells", wait=True)
+        show_image(cell, "detected cells")
         board_numbers = get_prediction(boximages)
         #board_numbers = get_prediction2(digits)
         if board_numbers.shape == (9, 9):
