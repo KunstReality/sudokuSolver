@@ -1,5 +1,6 @@
 #Droidcam implementation by https://github.com/cardboardcode/droidcam_simple_setup
 #from _cffi_backend import callback
+import argparse
 
 from OpenCVHelpers import *
 from TesorflowHelpers import *
@@ -9,8 +10,8 @@ from VideoStreamer import *
 from multiprocessing.dummy import Pool
 
 HTTP = 'http://'
-IP_ADDRESS = '192.168.178.21'
-URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
+#IP_ADDRESS = '192.168.0.1'
+#URL =  HTTP + IP_ADDRESS + ':4747/mjpegfeed?640x480'
 
 IMG_SIZE = 48
 IMG_SIZE2 = 28
@@ -20,7 +21,6 @@ def find_cells(perspective_img):
     if len(cells) == 81:
         cells = sort_boxes(cells)
         box_imgs = np.array(get_box_imgs(perspective_img, cells, IMG_SIZE, True)).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
-        #digits = get_box_imgs(perspective_img, cells, IMG_SIZE2, True)
 
         for cell in cells:
             cv2.rectangle(perspective_img, (cell[0], cell[1]), (cell[0] + cell[2], cell[1] + cell[3]), (36, 255, 12), 3)
@@ -74,11 +74,12 @@ def solve(cells):
             return True
     return False
 
-def camdroid():
+def camdroid(ip):
     print("[ droidcam.py ] - Initializing...")
 
     # Opening video stream of ip camera via its url
     #cap = cv2.VideoCapture(URL)
+    URL =  HTTP + ip + ':4747/mjpegfeed?640x480'
     cap = VideoCaptureHelper(URL)
     # Corrective actions printed in the even of failed connection.
     if cap.cap.isOpened() is not True:
@@ -121,9 +122,10 @@ def camdroid():
     cap.cap.release()
     cv2.destroyAllWindows()
 
-
-def main():
-    camdroid()
-
 if __name__ == '__main__':
-    main()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-ip", "--ipaddress", required=True,
+        help="path to output model after training")
+    args = vars(ap.parse_args())
+    ip = args["ipaddress"]
+    camdroid(ip)
