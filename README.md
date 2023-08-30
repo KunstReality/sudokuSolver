@@ -33,13 +33,13 @@ To use the Sudoku Solver script, follow these steps:
 1. **Clone this repository** to your local machine:
 
    ```bash
-   git clone https://github.com/yourusername/SudokuSolver.git
+   git clone https://github.com/KunstReality/sudokuSolver.git
 
 Replace yourusername with your actual GitHub username or provide the repository URL.
 
 2. **Navigate to the project directory:**
     ```bash
-    cd SudokuSolver
+    cd sudokuSolver
    
 3. **Open the Droidcam-App on your phone.**
 4. **Run the Sudoku Solver script** with the following command:
